@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вилка — обед с доставкой в офис</title>
+<meta name="description" content="Учебный прототип сервиса доставки обедов. Лабораторная работа «Аналитика и KPI».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --ink:#17201B; --muted:#56635C; --line:#D3DBD5;
+  --green:#2C6A4C; --green-ink:#FFFFFF; --green-soft:#DDEBE2;
+  --mustard:#E5AC17; --mustard-soft:#FBEFC9;
+  --danger:#A8261E; --danger-soft:#F8E1DE;
+  --radius-lg:18px; --radius:12px; --radius-sm:8px;
+  --display:"Unbounded", system-ui, sans-serif;
+  --body:"Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--mustard);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:760px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.logo{font:700 22px/1 var(--display);letter-spacing:-.02em;text-decoration:none;display:flex;align-items:center;gap:8px}
+.logo-mark{width:28px;height:28px;border-radius:50%;background:var(--mustard);display:grid;place-items:center}
+.addr{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.addr strong{color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.toplink{font-size:14px;font-weight:500;text-decoration:none;padding:8px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.toplink:hover{border-color:var(--ink)}
+
+main{max-width:760px;margin:0 auto;padding:20px 16px 120px}
+h1{font:700 28px/1.15 var(--display);letter-spacing:-.02em;margin:8px 0 6px}
+h2{font:600 20px/1.3 var(--body);margin:28px 0 12px}
+.lead{color:var(--muted);margin:0 0 20px;max-width:60ch}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);text-decoration:none;padding:6px 0}
+.back:hover{color:var(--ink)}
+
+/* filters */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sort{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.sort select{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px}
+
+/* restaurant list: delivery time first */
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rrow{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px 16px;text-decoration:none;cursor:pointer;width:100%;text-align:left}
+.rrow:hover{border-color:var(--ink)}
+.eta{font:700 22px/1 var(--display);letter-spacing:-.03em}
+.eta small{display:block;font:500 12px/1.4 var(--body);color:var(--muted);letter-spacing:0;margin-top:4px}
+.rname{font-weight:600;font-size:17px;line-height:1.3}
+.rmeta{font-size:14px;color:var(--muted);margin-top:2px}
+.rate{font-size:14px;font-weight:600;background:var(--mustard-soft);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius-lg);padding:24px;text-align:center;color:var(--muted)}
+
+/* restaurant page */
+.rhead{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px}
+.facts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 12px;font-size:14px}
+.fact b{display:block;font:700 16px/1.2 var(--display);letter-spacing:-.02em}
+.tabs{position:sticky;top:57px;z-index:10;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding:10px 0;margin:12px 0 0;border-bottom:1px solid var(--line)}
+.tab{border:0;background:none;padding:6px 12px;border-radius:999px;font-size:15px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.tab:hover{background:var(--surface)}
+.menu{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.iname{font-weight:600}
+.idesc{font-size:14px;color:var(--muted);margin-top:2px}
+.iprice{font-weight:600;margin-top:6px}
+.iprice span{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px}
+.add{border:0;background:var(--green-soft);color:var(--green);font-weight:600;border-radius:999px;padding:9px 16px;cursor:pointer;white-space:nowrap}
+.add:hover{background:var(--green);color:#fff}
+.stepper{display:flex;align-items:center;background:var(--green);color:#fff;border-radius:999px;overflow:hidden}
+.stepper button{border:0;background:none;color:#fff;width:38px;height:38px;font-size:20px;cursor:pointer}
+.stepper button:hover{background:rgba(255,255,255,.15)}
+.stepper output{min-width:20px;text-align:center;font-weight:600}
+
+/* bottom cart bar */
+.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
+.cartbar-in{max-width:728px;margin:0 auto;pointer-events:auto;display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:var(--radius-lg);padding:12px 12px 12px 18px;box-shadow:0 10px 30px rgba(23,32,27,.25)}
+.cartbar-text{font-size:14px;line-height:1.35;min-width:0}
+.cartbar-text b{font-size:16px}
+.cartbar-hint{color:#C9D6CE}
+.cartbar .btn{margin-left:auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:12px 22px;font-weight:600;cursor:pointer;text-decoration:none;background:var(--green);color:var(--green-ink);white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn.light{background:var(--mustard);color:var(--ink)}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.wide{width:100%;padding:15px 22px;font-size:17px}
+
+/* cart */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:6px 18px}
+.cline{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.cline:last-child{border-bottom:0}
+.cline .stepper{background:var(--green-soft);color:var(--green)}
+.cline .stepper button{color:var(--green);width:34px;height:34px}
+.panel.sum{padding:10px 18px}
+.srow{display:flex;justify-content:space-between;padding:6px 0;color:var(--muted)}
+.srow.total{color:var(--ink);font-weight:600;font-size:19px;border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
+.note{border-radius:var(--radius);padding:12px 14px;font-size:15px;margin:14px 0}
+.note.warn{background:var(--mustard-soft)}
+.note.err{background:var(--danger-soft);color:var(--danger)}
+.note.ok{background:var(--green-soft);color:var(--green)}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--mustard)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* form */
+form{display:grid;gap:16px}
+.field label{display:block;font-weight:500;margin-bottom:6px}
+.field .hint{font-size:13px;color:var(--muted);margin-top:4px}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:12px 14px}
+.field input:focus,.field textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px var(--mustard-soft)}
+.field.invalid input{border-color:var(--danger)}
+.field .error{color:var(--danger);font-size:14px;margin-top:4px}
+.row2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+fieldset{border:0;padding:0;margin:0}
+legend{font-weight:500;margin-bottom:8px;padding:0}
+.choice{display:flex;gap:8px;flex-wrap:wrap}
+.choice label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:10px 14px;cursor:pointer}
+.choice input{accent-color:var(--green);width:18px;height:18px}
+.choice label:has(input:checked){border-color:var(--green);background:var(--green-soft)}
+
+/* success */
+.done{text-align:center;padding:40px 0}
+.done .eta{font-size:56px;margin:12px 0}
+.check{width:72px;height:72px;margin:0 auto;border-radius:50%;background:var(--green);display:grid;place-items:center;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+
+/* orders */
+.order{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px 18px;display:grid;gap:8px}
+.order-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.order-items{color:var(--muted);font-size:15px}
+.order-f{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;z-index:50;background:rgba(23,32,27,.45);display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:22px;max-width:420px;width:100%}
+.modal h3{margin:0 0 8px;font-size:19px}
+.modal p{margin:0 0 18px;color:var(--muted)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+
+/* debug panel (?debug=1) */
+.debug{pointer-events:none;opacity:.9;position:fixed;right:12px;top:64px;z-index:60;width:min(340px,calc(100vw - 24px));max-height:30vh;overflow:auto;background:#101713;color:#D7F5E3;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.debug b{color:#FBEFC9}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:560px){
+  h1{font-size:23px}
+  .addr{display:none}
+  .toplink{margin-left:auto}
+  .rrow{grid-template-columns:74px 1fr;gap:12px}
+  .rrow .rate{grid-column:2;justify-self:start}
+  .eta{font-size:19px}
+  .sort{margin-left:0;width:100%}
+  .row2{grid-template-columns:1fr}
+  .cartbar-in{padding-left:14px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#/" aria-label="Вилка — на главную">
+      <span class="logo-mark" aria-hidden="true">
+        <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M2 1v5a5 5 0 0 0 10 0V1M7 1v16M4.5 1v4M9.5 1v4" stroke="#17201B" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </span>Вилка
+    </a>
+    <div class="addr" title="Адрес доставки">Доставка: <strong>Кронверкский пр., 49</strong></div>
+    <a class="toplink" href="#/orders">Мои заказы</a>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<div id="cartbar"></div>
+<div id="modal"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+/* ============================================================
+   НАСТРОЙКА АНАЛИТИКИ
+   1. Создайте счётчик в Яндекс.Метрике (metrika.yandex.ru) и
+      вставьте его номер в METRIKA_ID.
+   2. (необязательно) Вставьте Measurement ID из GA4 в GA4_ID.
+   3. Откройте сайт с ?debug=1, чтобы видеть события на экране,
+      или с ?_ym_debug=1, чтобы Метрика писала их в консоль.
+   ============================================================ */
+const METRIKA_ID = 0;          // например 98765432
+const GA4_ID = "";             // например "G-XXXXXXXXXX"
+
+const DEBUG = new URLSearchParams(location.search).has("debug");
+
+(function loadAnalytics(){
+  if (METRIKA_ID) {
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+    ym(METRIKA_ID,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true,trackHash:true});
+  }
+  if (GA4_ID) {
+    const s=document.createElement("script"); s.async=true;
+    s.src="https://www.googletagmanager.com/gtag/js?id="+GA4_ID; document.head.appendChild(s);
+    window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments)};
+    gtag("js",new Date()); gtag("config",GA4_ID);
+  }
+})();
+
+const sentOnce = new Set();
+const debugLog = [];
+/* track(name, params, once): once=true — событие отправляется один раз за визит
+   (так воронка считает пользователей, а не клики). */
+function track(name, params = {}, once = false){
+  if (once && sentOnce.has(name)) return;
+  if (once) sentOnce.add(name);
+  try { if (METRIKA_ID && window.ym) ym(METRIKA_ID, "reachGoal", name, params); } catch(e){}
+  try { if (GA4_ID && window.gtag) gtag("event", name, params); } catch(e){}
+  const t = new Date().toLocaleTimeString("ru-RU");
+  debugLog.unshift(`<div><b>${t} ${name}</b> ${Object.keys(params).length ? escapeHtml(JSON.stringify(params)) : ""}</div>`);
+  if (DEBUG) { console.log("[event]", name, params); renderDebug(); }
+}
+function renderDebug(){
+  let el = document.getElementById("debug");
+  if (!el){ el = document.createElement("div"); el.id="debug"; el.className="debug"; document.body.appendChild(el); }
+  el.innerHTML = "<div style='opacity:.7;margin-bottom:6px'>События (debug)</div>" + debugLog.slice(0,30).join("");
+}
+
+/* ============================== ДАННЫЕ ============================== */
+const SERVICE_FEE = 39;
+const R = [
+  { id:"shchi", name:"Щи да каша", cuisine:"Русская", tags:["soup"], eta:[25,35], fee:99, freeFrom:1200, min:400, rating:4.8, votes:1240,
+    menu:{
+      "Супы":[{id:"s1",name:"Щи из квашеной капусты",desc:"Со сметаной и укропом",w:"350 г",p:240},{id:"s2",name:"Борщ",desc:"С говядиной, сметана отдельно",w:"350 г",p:270},{id:"s3",name:"Куриная лапша",desc:"Домашняя лапша, яйцо",w:"300 г",p:220}],
+      "Горячее":[{id:"m1",name:"Гречка с говядиной по-купечески",desc:"Говядина, грибы, лук",w:"320 г",p:330},{id:"m2",name:"Котлета с пюре",desc:"Куриная котлета, картофельное пюре",w:"300 г",p:310},{id:"m3",name:"Пельмени",desc:"Говядина и свинина, сметана",w:"250 г",p:290}],
+      "Напитки":[{id:"d1",name:"Морс клюквенный",desc:"",w:"0,4 л",p:120},{id:"d2",name:"Компот",desc:"Из сухофруктов",w:"0,4 л",p:90}]
+    }},
+  { id:"pho", name:"Фо Бо", cuisine:"Вьетнамская", tags:["soup","asian"], eta:[35,45], fee:149, freeFrom:1500, min:500, rating:4.7, votes:860,
+    menu:{
+      "Супы":[{id:"s1",name:"Фо бо",desc:"Говяжий бульон, рисовая лапша",w:"500 мл",p:420},{id:"s2",name:"Фо га",desc:"Куриный бульон, рисовая лапша",w:"500 мл",p:380},{id:"s3",name:"Том ям",desc:"Креветки, кокосовое молоко",w:"400 мл",p:490}],
+      "Горячее":[{id:"m1",name:"Бун бо",desc:"Лапша, говядина, овощи",w:"350 г",p:450},{id:"m2",name:"Жареный рис с курицей",desc:"Яйцо, овощи",w:"320 г",p:360}],
+      "Напитки":[{id:"d1",name:"Холодный чай с лимоном",desc:"",w:"0,4 л",p:150}]
+    }},
+  { id:"khinkali", name:"Харчо и хинкали", cuisine:"Грузинская", tags:["soup"], eta:[40,55], fee:199, freeFrom:1000, min:600, rating:4.9, votes:2310,
+    menu:{
+      "Супы":[{id:"s1",name:"Харчо",desc:"Говядина, рис, грецкий орех",w:"350 г",p:320},{id:"s2",name:"Чихиртма",desc:"Куриный суп с яйцом",w:"350 г",p:290}],
+      "Горячее":[{id:"m1",name:"Хинкали с говядиной, 5 шт.",desc:"",w:"400 г",p:450},{id:"m2",name:"Хачапури по-аджарски",desc:"Сыр, яйцо, масло",w:"420 г",p:520},{id:"m3",name:"Чахохбили",desc:"Курица в томатном соусе",w:"300 г",p:430}],
+      "Напитки":[{id:"d1",name:"Лимонад тархун",desc:"",w:"0,5 л",p:190}]
+    }},
+  { id:"spoon", name:"Зелёная ложка", cuisine:"Здоровая еда", tags:["soup","healthy"], eta:[20,30], fee:199, freeFrom:900, min:600, rating:4.6, votes:540,
+    menu:{
+      "Супы":[{id:"s1",name:"Крем-суп из брокколи",desc:"Со сливками и тыквенными семечками",w:"300 г",p:290},{id:"s2",name:"Чечевичный суп",desc:"С копчёной паприкой",w:"300 г",p:260}],
+      "Горячее":[{id:"m1",name:"Боул с курицей и киноа",desc:"Авокадо, эдамаме, соус тахини",w:"350 г",p:450},{id:"m2",name:"Лосось с булгуром",desc:"Запечённый лосось, овощи",w:"300 г",p:590}],
+      "Напитки":[{id:"d1",name:"Смузи ягодный",desc:"",w:"0,3 л",p:220}]
+    }},
+  { id:"bulon", name:"Бульон", cuisine:"Супы и паста", tags:["soup"], eta:[15,25], fee:99, freeFrom:800, min:300, rating:4.4, votes:310,
+    menu:{
+      "Супы":[{id:"s1",name:"Солянка мясная",desc:"Оливки, лимон",w:"300 г",p:280},{id:"s2",name:"Сырный суп с беконом",desc:"",w:"300 г",p:250},{id:"s3",name:"Гороховый суп",desc:"С копчёностями и сухариками",w:"300 г",p:210}],
+      "Горячее":[{id:"m1",name:"Паста карбонара",desc:"Бекон, пармезан, желток",w:"280 г",p:360},{id:"m2",name:"Паста с курицей и грибами",desc:"Сливочный соус",w:"280 г",p:340}],
+      "Напитки":[{id:"d1",name:"Морс брусничный",desc:"",w:"0,4 л",p:110}]
+    }},
+  { id:"pizza", name:"Пицца на углу", cuisine:"Пицца", tags:["pizza"], eta:[30,40], fee:129, freeFrom:1000, min:700, rating:4.5, votes:1780,
+    menu:{
+      "Пицца":[{id:"p1",name:"Маргарита",desc:"30 см",w:"550 г",p:490},{id:"p2",name:"Пепперони",desc:"30 см",w:"600 г",p:590},{id:"p3",name:"Четыре сыра",desc:"30 см",w:"580 г",p:620}],
+      "Закуски":[{id:"z1",name:"Картофель по-деревенски",desc:"Соус на выбор",w:"200 г",p:190}],
+      "Напитки":[{id:"d1",name:"Кола",desc:"",w:"0,5 л",p:130}]
+    }}
+];
+const HISTORY = [
+  { no:"58 214", date:"Вчера, 13:05", rid:"shchi", items:[["s2",1],["m1",1]] },
+  { no:"57 930", date:"14 октября, 12:48", rid:"bulon", items:[["s1",1],["m2",1],["d1",1]] }
+];
+
+/* ============================== СОСТОЯНИЕ ============================== */
+const state = {
+  filter: "all",          // all | soup | fast | asian | pizza
+  sort: "eta",            // eta | fee | rating
+  cart: { rid: null, items: {} },   // items: { itemId: qty }
+  firstAddAt: null,
+  lastOrder: null
+};
+const byId = id => R.find(r => r.id === id);
+const findItem = (r, iid) => { for (const cat in r.menu){ const it = r.menu[cat].find(x => x.id === iid); if (it) return it; } return null; };
+const rub = n => n.toLocaleString("ru-RU") + " ₽";
+const plural = (n, one, few, many) => { const m10=n%10, m100=n%100; return m10===1&&m100!==11?one:(m10>=2&&m10<=4&&(m100<10||m100>=20)?few:many); };
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function announce(t){ const l=document.getElementById("live"); l.textContent=""; setTimeout(()=>l.textContent=t,30); }
+
+function cartCount(){ return Object.values(state.cart.items).reduce((a,b)=>a+b,0); }
+function totals(){
+  const r = byId(state.cart.rid);
+  if (!r) return null;
+  let sub = 0;
+  for (const [iid, q] of Object.entries(state.cart.items)) sub += findItem(r, iid).p * q;
+  const fee = sub >= r.freeFrom ? 0 : r.fee;
+  return { r, sub, fee, service: SERVICE_FEE, total: sub + fee + SERVICE_FEE, lack: Math.max(0, r.min - sub) };
+}
+
+/* ============================== КОРЗИНА ============================== */
+function addItem(rid, iid, source = "menu"){
+  if (state.cart.rid && state.cart.rid !== rid && cartCount() > 0){
+    const cur = byId(state.cart.rid), next = byId(rid);
+    confirmModal(
+      "Начать новую корзину?",
+      `В корзине блюда из «${cur.name}». Заказ можно собрать только из одного ресторана. Очистить корзину и добавить блюдо из «${next.name}»?`,
+      "Очистить и добавить",
+      () => { track("cart_replace", { from: cur.id, to: next.id }); state.cart = { rid:null, items:{} }; addItem(rid, iid, source); }
+    );
+    return;
+  }
+  state.cart.rid = rid;
+  state.cart.items[iid] = (state.cart.items[iid] || 0) + 1;
+  if (!state.firstAddAt) state.firstAddAt = Date.now();
+  const it = findItem(byId(rid), iid);
+  track("add_to_cart", { restaurant: rid, item: it.name, source }, true);
+  announce(`${it.name} в корзине`);
+  render();
+}
+function changeQty(iid, d){
+  const q = (state.cart.items[iid] || 0) + d;
+  if (q <= 0){
+    delete state.cart.items[iid];
+    track("item_remove", { item: iid });
+    if (!cartCount()) state.cart.rid = null;
+  } else state.cart.items[iid] = q;
+  render();
+}
+
+/* ============================== ЭКРАНЫ ============================== */
+const app = document.getElementById("app");
+
+function viewCatalog(){
+  track("catalog_view", {}, true);
+  let list = R.slice();
+  const f = state.filter;
+  if (f === "soup") list = list.filter(r => r.tags.includes("soup"));
+  if (f === "fast") list = list.filter(r => r.eta[1] <= 30);
+  if (f === "asian") list = list.filter(r => r.tags.includes("asian"));
+  if (f === "pizza") list = list.filter(r => r.tags.includes("pizza"));
+  const s = state.sort;
+  list.sort((a,b) => s==="eta" ? a.eta[0]-b.eta[0] : s==="fee" ? a.fee-b.fee : b.rating-a.rating);
+
+  const chips = [["all","Все"],["soup","Есть супы"],["fast","До 30 минут"],["asian","Азиатская"],["pizza","Пицца"]]
+    .map(([k,t]) => `<button class="chip" data-filter="${k}" aria-pressed="${f===k}">${t}</button>`).join("");
+
+  app.innerHTML = `
+    <h1>Обед к перерыву</h1>
+    <p class="lead">Рестораны рядом с офисом. Сначала показываем, кто привезёт быстрее.</p>
+    <div class="filters" role="group" aria-label="Фильтры">${chips}
+      <label class="sort">Сортировка
+        <select id="sort">
+          <option value="eta" ${s==="eta"?"selected":""}>Быстрее</option>
+          <option value="fee" ${s==="fee"?"selected":""}>Дешевле доставка</option>
+          <option value="rating" ${s==="rating"?"selected":""}>Выше рейтинг</option>
+        </select>
+      </label>
+    </div>
+    ${list.length ? `<ul class="rlist">${list.map(r => `
+      <li><a class="rrow" href="#/r/${r.id}">
+        <div class="eta">${r.eta[0]}–${r.eta[1]}<small>минут</small></div>
+        <div>
+          <div class="rname">${r.name}</div>
+          <div class="rmeta">${r.cuisine}. Доставка ${r.fee ? rub(r.fee) : "бесплатно"}, заказ от ${rub(r.min)}</div>
+        </div>
+        <div class="rate" aria-label="Рейтинг ${r.rating}">★ ${r.rating.toString().replace(".",",")}</div>
+      </a></li>`).join("")}</ul>`
+    : `<div class="empty">Под этот фильтр ничего не нашлось.<br><br><button class="btn ghost" data-filter="all">Показать все рестораны</button></div>`}
+  `;
+  app.querySelectorAll("[data-filter]").forEach(b => b.onclick = () => {
+    state.filter = b.dataset.filter; track("filter_apply", { filter: state.filter }); render();
+  });
+  app.querySelector("#sort").onchange = e => { state.sort = e.target.value; track("filter_apply", { sort: state.sort }); render(); };
+}
+
+function viewRestaurant(rid){
+  const r = byId(rid);
+  if (!r) return notFound();
+  track("restaurant_open", { restaurant: rid }, true);
+  const cats = Object.keys(r.menu);
+  app.innerHTML = `
+    <a class="back" href="#/">← Все рестораны</a>
+    <div class="rhead"><h1>${r.name}</h1></div>
+    <div class="facts">
+      <div class="fact"><b>${r.eta[0]}–${r.eta[1]} мин</b>доставка</div>
+      <div class="fact"><b>${r.fee ? rub(r.fee) : "0 ₽"}</b>бесплатно от ${rub(r.freeFrom)}</div>
+      <div class="fact"><b>от ${rub(r.min)}</b>минимальный заказ</div>
+      <div class="fact"><b>★ ${r.rating.toString().replace(".",",")}</b>${r.votes.toLocaleString("ru-RU")} оценок</div>
+    </div>
+    <nav class="tabs" aria-label="Разделы меню">${cats.map((c,i)=>`<a class="tab" href="#cat-${i}" data-cat="${i}">${c}</a>`).join("")}</nav>
+    ${cats.map((c,i) => `
+      <h2 id="cat-${i}">${c}</h2>
+      <ul class="menu">${r.menu[c].map(it => {
+        const q = state.cart.rid === rid ? (state.cart.items[it.id] || 0) : 0;
+        return `<li class="item">
+          <div>
+            <div class="iname">${it.name}</div>
+            ${it.desc ? `<div class="idesc">${it.desc}</div>` : ""}
+            <div class="iprice">${rub(it.p)}<span>${it.w}</span></div>
+          </div>
+          ${q ? `<div class="stepper" role="group" aria-label="${it.name}, количество">
+                    <button data-dec="${it.id}" aria-label="Убрать одну порцию">−</button><output>${q}</output><button data-inc="${it.id}" aria-label="Добавить ещё одну порцию">+</button></div>`
+              : `<button class="add" data-add="${it.id}">Добавить</button>`}
+        </li>`;}).join("")}</ul>`).join("")}
+  `;
+  app.querySelectorAll("[data-cat]").forEach(a => a.onclick = e => {
+    e.preventDefault(); document.getElementById("cat-"+a.dataset.cat).scrollIntoView({behavior:"smooth", block:"start"});
+  });
+  app.querySelectorAll("[data-add]").forEach(b => b.onclick = () => addItem(rid, b.dataset.add));
+  app.querySelectorAll("[data-inc]").forEach(b => b.onclick = () => changeQty(b.dataset.inc, +1));
+  app.querySelectorAll("[data-dec]").forEach(b => b.onclick = () => changeQty(b.dataset.dec, -1));
+}
+
+function viewCart(){
+  const t = totals();
+  if (!t || !cartCount()){
+    app.innerHTML = `<a class="back" href="#/">← Все рестораны</a><h1>Корзина</h1>
+      <div class="empty">Корзина пуста. Выберите ресторан и добавьте блюда.<br><br><a class="btn" href="#/">К ресторанам</a></div>`;
+    return;
+  }
+  track("cart_open", { restaurant: t.r.id, subtotal: t.sub }, true);
+  const lines = Object.entries(state.cart.items).map(([iid,q]) => {
+    const it = findItem(t.r, iid);
+    return `<div class="cline">
+      <div><div class="iname">${it.name}</div><div class="idesc">${rub(it.p)} за порцию</div></div>
+      <div class="stepper" role="group" aria-label="${it.name}, количество"><button data-dec="${iid}" aria-label="Убрать одну порцию">−</button><output>${q}</output><button data-inc="${iid}" aria-label="Добавить ещё одну порцию">+</button></div>
+      <div style="font-weight:600;min-width:72px;text-align:right">${rub(it.p*q)}</div>
+    </div>`;
+  }).join("");
+  const toFree = t.r.freeFrom - t.sub;
+  app.innerHTML = `
+    <a class="back" href="#/r/${t.r.id}">← Меню «${t.r.name}»</a>
+    <h1>Корзина</h1>
+    <p class="lead">${t.r.name}. Привезём за ${t.r.eta[0]}–${t.r.eta[1]} минут.</p>
+    <div class="panel">${lines}</div>
+    <div class="panel sum" style="margin-top:12px">
+      <div class="srow"><span>Блюда</span><span>${rub(t.sub)}</span></div>
+      <div class="srow"><span>Доставка${t.fee===0?" (бесплатно от "+rub(t.r.freeFrom)+")":""}</span><span>${rub(t.fee)}</span></div>
+      <div class="srow"><span>Сервисный сбор</span><span>${rub(t.service)}</span></div>
+      <div class="srow total"><span>Итого</span><span>${rub(t.total)}</span></div>
+    </div>
+    ${t.lack > 0
+      ? `<div class="note warn" id="minnote">Минимальный заказ в этом ресторане — ${rub(t.r.min)}. Добавьте блюд ещё на ${rub(t.lack)}.
+           <div class="bar" aria-hidden="true"><i style="width:${Math.round(t.sub/t.r.min*100)}%"></i></div></div>`
+      : (t.fee > 0 && toFree > 0 && toFree <= 300 ? `<div class="note ok">Добавьте блюд на ${rub(toFree)} — и доставка станет бесплатной.</div>` : "")}
+    <div style="margin-top:16px"><button class="btn wide" id="go">Перейти к оформлению</button></div>
+  `;
+  app.querySelectorAll("[data-inc]").forEach(b => b.onclick = () => changeQty(b.dataset.inc, +1));
+  app.querySelectorAll("[data-dec]").forEach(b => b.onclick = () => changeQty(b.dataset.dec, -1));
+  app.querySelector("#go").onclick = () => {
+    const tt = totals();
+    if (tt.lack > 0){
+      track("checkout_blocked_min_sum", { restaurant: tt.r.id, lack: tt.lack });
+      const n = document.getElementById("minnote"); n.classList.remove("shake"); void n.offsetWidth; n.classList.add("shake");
+      announce(`Не хватает ${tt.lack} рублей до минимального заказа`);
+      return;
+    }
+    location.hash = "#/checkout";
+  };
+}
+
+function viewCheckout(){
+  const t = totals();
+  if (!t || !cartCount() || t.lack > 0){ location.hash = "#/cart"; return; }
+  track("checkout_start", { restaurant: t.r.id, total: t.total }, true);
+  app.innerHTML = `
+    <a class="back" href="#/cart">← Корзина</a>
+    <h1>Оформление</h1>
+    <p class="lead">${t.r.name}, ${cartCount()} ${plural(cartCount(),"блюдо","блюда","блюд")}. Оплата при получении.</p>
+    <form id="f" novalidate>
+      <div class="field" data-f="name"><label for="name">Имя</label><input id="name" name="name" autocomplete="given-name"></div>
+      <div class="field" data-f="phone"><label for="phone">Телефон</label><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00"><div class="hint">Курьер позвонит, когда подъедет</div></div>
+      <div class="row2">
+        <div class="field" data-f="address"><label for="address">Адрес</label><input id="address" name="address" value="Кронверкский проспект, 49" autocomplete="street-address"></div>
+        <div class="field" data-f="office"><label for="office">Офис или квартира</label><input id="office" name="office"></div>
+      </div>
+      <div class="field"><label for="comment">Комментарий курьеру</label><textarea id="comment" name="comment" rows="2" placeholder="Например: пропуск на ресепшене"></textarea></div>
+      <fieldset>
+        <legend>Когда привезти</legend>
+        <div class="choice">
+          <label><input type="radio" name="when" value="asap" checked> Как можно скорее, ${t.r.eta[0]}–${t.r.eta[1]} мин</label>
+          <label><input type="radio" name="when" value="later"> Ко времени</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Оплата</legend>
+        <div class="choice">
+          <label><input type="radio" name="pay" value="card" checked> Картой курьеру</label>
+          <label><input type="radio" name="pay" value="cash"> Наличными</label>
+        </div>
+      </fieldset>
+      <div class="panel sum">
+        <div class="srow"><span>Блюда</span><span>${rub(t.sub)}</span></div>
+        <div class="srow"><span>Доставка</span><span>${rub(t.fee)}</span></div>
+        <div class="srow"><span>Сервисный сбор</span><span>${rub(t.service)}</span></div>
+        <div class="srow total"><span>К оплате</span><span>${rub(t.total)}</span></div>
+      </div>
+      <button class="btn wide" type="submit">Заказать за ${rub(t.total)}</button>
+    </form>
+  `;
+  const f = app.querySelector("#f");
+  f.onsubmit = e => {
+    e.preventDefault();
+    const v = Object.fromEntries(new FormData(f));
+    const errs = {};
+    if (!v.name.trim()) errs.name = "Укажите имя, чтобы курьер знал, кого спросить";
+    if (v.phone.replace(/\D/g,"").length < 11) errs.phone = "Нужен номер из 11 цифр, например +7 900 000-00-00";
+    if (!v.address.trim()) errs.address = "Укажите адрес доставки";
+    f.querySelectorAll(".field").forEach(fl => { fl.classList.remove("invalid"); fl.querySelector(".error")?.remove(); });
+    const keys = Object.keys(errs);
+    if (keys.length){
+      track("form_error", { fields: keys.join(",") });
+      keys.forEach(k => {
+        const fl = f.querySelector(`[data-f="${k}"]`); fl.classList.add("invalid");
+        fl.insertAdjacentHTML("beforeend", `<div class="error">${errs[k]}</div>`);
+      });
+      f.querySelector(`[data-f="${keys[0]}"] input`).focus();
+      return;
+    }
+    const secs = state.firstAddAt ? Math.round((Date.now() - state.firstAddAt) / 1000) : null;
+    state.lastOrder = { r: t.r, total: t.total, no: String(59000 + Math.floor(Math.random()*900)).replace(/(\d{2})(\d{3})/, "$1 $2"), when: v.when };
+    track("order_success", { restaurant: t.r.id, total: t.total, seconds_from_first_add: secs, payment: v.pay }, true);
+    state.cart = { rid:null, items:{} };
+    location.hash = "#/success";
+  };
+}
+
+function viewSuccess(){
+  const o = state.lastOrder;
+  if (!o){ location.hash = "#/"; return; }
+  app.innerHTML = `<div class="done">
+    <div class="check" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h1 style="margin-top:20px">Заказ принят</h1>
+    <p class="lead" style="margin:0 auto">Заказ № ${o.no} из «${o.r.name}» на ${rub(o.total)}. Оплата курьеру при получении.</p>
+    <div class="eta">${o.when === "later" ? "ко времени" : `${o.r.eta[0]}–${o.r.eta[1]}<small>минут до доставки</small>`}</div>
+    <a class="btn ghost" href="#/">Вернуться к ресторанам</a>
+    <p class="idesc" style="margin-top:28px">Это учебный прототип: заказ никуда не отправляется.</p>
+  </div>`;
+}
+
+function viewOrders(){
+  track("orders_open", {}, true);
+  app.innerHTML = `
+    <a class="back" href="#/">← Все рестораны</a>
+    <h1>Мои заказы</h1>
+    <p class="lead">Можно повторить прошлый заказ — блюда сразу окажутся в корзине.</p>
+    <div style="display:grid;gap:10px">${HISTORY.map((h,i) => {
+      const r = byId(h.rid);
+      const names = h.items.map(([iid,q]) => findItem(r,iid).name + (q>1?` × ${q}`:"")).join(", ");
+      const sum = h.items.reduce((a,[iid,q]) => a + findItem(r,iid).p*q, 0);
+      return `<div class="order">
+        <div class="order-h"><div class="rname">${r.name}</div><div class="rmeta">${h.date}, № ${h.no}</div></div>
+        <div class="order-items">${names}</div>
+        <div class="order-f"><b>${rub(sum)}</b><button class="btn light" data-repeat="${i}">Повторить заказ</button></div>
+      </div>`;}).join("")}</div>`;
+  app.querySelectorAll("[data-repeat]").forEach(b => b.onclick = () => {
+    const h = HISTORY[+b.dataset.repeat];
+    const go = () => {
+      state.cart = { rid: h.rid, items: Object.fromEntries(h.items) };
+      if (!state.firstAddAt) state.firstAddAt = Date.now();
+      track("repeat_order_click", { restaurant: h.rid });
+      track("add_to_cart", { restaurant: h.rid, source: "repeat" }, true);
+      location.hash = "#/cart";
+    };
+    if (cartCount() && state.cart.rid){
+      confirmModal("Заменить корзину?", "Сейчас в корзине есть другие блюда. Повтор заказа заменит их.", "Заменить", go);
+    } else go();
+  });
+}
+
+function notFound(){ app.innerHTML = `<h1>Страница не найдена</h1><p class="lead">Такой страницы нет.</p><a class="btn" href="#/">К ресторанам</a>`; }
+
+/* нижняя плашка корзины */
+function renderCartBar(){
+  const el = document.getElementById("cartbar");
+  const route = location.hash || "#/";
+  const t = totals();
+  if (!t || !cartCount() || /^#\/(cart|checkout|success)/.test(route)){ el.innerHTML = ""; return; }
+  const n = cartCount();
+  el.innerHTML = `<div class="cartbar"><div class="cartbar-in">
+    <div class="cartbar-text"><b>${rub(t.total)}</b> · ${n} ${plural(n,"блюдо","блюда","блюд")}<br>
+      <span class="cartbar-hint">${t.lack > 0 ? `до минимального заказа ${rub(t.lack)}` : `с доставкой и сбором, ${t.r.eta[0]}–${t.r.eta[1]} мин`}</span></div>
+    <a class="btn light" href="#/cart">Корзина</a>
+  </div></div>`;
+}
+
+/* модальное окно подтверждения */
+function confirmModal(title, text, okText, onOk){
+  const m = document.getElementById("modal");
+  m.innerHTML = `<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h3 id="mt">${title}</h3><p>${text}</p>
+    <div class="modal-actions"><button class="btn ghost" id="mc">Оставить как есть</button><button class="btn" id="mo">${okText}</button></div>
+  </div></div>`;
+  const close = () => m.innerHTML = "";
+  m.querySelector("#mc").onclick = close;
+  m.querySelector(".modal-bg").onclick = e => { if (e.target.classList.contains("modal-bg")) close(); };
+  m.querySelector("#mo").onclick = () => { close(); onOk(); };
+  m.querySelector("#mo").focus();
+}
+
+/* ============================== РОУТЕР ============================== */
+let lastRoute = null;
+function render(){
+  const h = location.hash || "#/";
+  const [, page, arg] = h.split("/");
+  if (h !== lastRoute){
+    if (lastRoute !== null && METRIKA_ID && window.ym) { try { ym(METRIKA_ID, "hit", location.href, { referer: lastRoute }); } catch(e){} }
+    lastRoute = h; window.scrollTo(0,0);
+  }
+  if (!page) viewCatalog();
+  else if (page === "r") viewRestaurant(arg);
+  else if (page === "cart") viewCart();
+  else if (page === "checkout") viewCheckout();
+  else if (page === "success") viewSuccess();
+  else if (page === "orders") viewOrders();
+  else notFound();
+  renderCartBar();
+}
+window.addEventListener("hashchange", render);
+render();
+if (DEBUG) renderDebug();
+</script>
+</body>
+</html>
