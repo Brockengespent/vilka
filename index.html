@@ -222,6 +222,9 @@ function track(name, params = {}, once = false){
   if (once && sentOnce.has(name)) return;
   if (once) sentOnce.add(name);
   try { if (METRIKA_ID && window.ym) ym(METRIKA_ID, "reachGoal", name, params); } catch(e){}
+  /* Дублируем событие как параметр визита: параметры пишутся даже без созданных целей
+     и видны в отчёте «Параметры визитов» (страховка на время сбоев кабинета Метрики). */
+  try { if (METRIKA_ID && window.ym) ym(METRIKA_ID, "params", { events: { [name]: 1 } }); } catch(e){}
   try { if (GA4_ID && window.gtag) gtag("event", name, params); } catch(e){}
   const t = new Date().toLocaleTimeString("ru-RU");
   debugLog.unshift(`<div><b>${t} ${name}</b> ${Object.keys(params).length ? escapeHtml(JSON.stringify(params)) : ""}</div>`);
