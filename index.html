@@ -194,7 +194,7 @@ legend{font-weight:500;margin-bottom:8px;padding:0}
    3. Откройте сайт с ?debug=1, чтобы видеть события на экране,
       или с ?_ym_debug=1, чтобы Метрика писала их в консоль.
    ============================================================ */
-const METRIKA_ID = 0;          // например 98765432
+const METRIKA_ID = 113659963;  // счётчик «ЛР3 РЧОИ»
 const GA4_ID = "";             // например "G-XXXXXXXXXX"
 
 const DEBUG = new URLSearchParams(location.search).has("debug");
@@ -203,8 +203,8 @@ const DEBUG = new URLSearchParams(location.search).has("debug");
   if (METRIKA_ID) {
     (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
     m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-    (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
-    ym(METRIKA_ID,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true,trackHash:true});
+    (window,document,"script","https://mc.yandex.ru/metrika/tag.js?id="+METRIKA_ID,"ym");
+    ym(METRIKA_ID,"init",{ssr:true,webvisor:true,clickmap:true,referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true,trackHash:true});
   }
   if (GA4_ID) {
     const s=document.createElement("script"); s.async=true;
