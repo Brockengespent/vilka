@@ -196,6 +196,8 @@ legend{font-weight:500;margin-bottom:8px;padding:0}
    ============================================================ */
 const METRIKA_ID = 113659963;  // счётчик «ЛР3 РЧОИ»
 const GA4_ID = "";             // например "G-XXXXXXXXXX"
+const POSTHOG_KEY = "phc_wLYZdU3KUEiQtSxd6EebHuHBLLXneX5s3picMu7YP4du"; // публичный ключ проекта
+const POSTHOG_HOST = "https://eu.i.posthog.com";
 
 const DEBUG = new URLSearchParams(location.search).has("debug");
 
@@ -205,6 +207,10 @@ const DEBUG = new URLSearchParams(location.search).has("debug");
     m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
     (window,document,"script","https://mc.yandex.ru/metrika/tag.js?id="+METRIKA_ID,"ym");
     ym(METRIKA_ID,"init",{ssr:true,webvisor:true,clickmap:true,referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true,trackHash:true});
+  }
+  if (POSTHOG_KEY) {
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init(POSTHOG_KEY, { api_host: POSTHOG_HOST, person_profiles: "always", capture_pageview: true, autocapture: true });
   }
   if (GA4_ID) {
     const s=document.createElement("script"); s.async=true;
@@ -226,6 +232,7 @@ function track(name, params = {}, once = false){
      и видны в отчёте «Параметры визитов» (страховка на время сбоев кабинета Метрики). */
   try { if (METRIKA_ID && window.ym) ym(METRIKA_ID, "params", { events: { [name]: 1 } }); } catch(e){}
   try { if (GA4_ID && window.gtag) gtag("event", name, params); } catch(e){}
+  try { if (POSTHOG_KEY && window.posthog) posthog.capture(name, params); } catch(e){}
   const t = new Date().toLocaleTimeString("ru-RU");
   debugLog.unshift(`<div><b>${t} ${name}</b> ${Object.keys(params).length ? escapeHtml(JSON.stringify(params)) : ""}</div>`);
   if (DEBUG) { console.log("[event]", name, params); renderDebug(); }
