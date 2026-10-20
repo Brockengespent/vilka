@@ -7,7 +7,8 @@
 <meta name="description" content="Учебный прототип сервиса доставки обедов. Лабораторная работа «Аналитика и KPI».">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<!-- Шрифты грузятся в фоне: если Google Fonts недоступен, страница не ждёт его и показывается системным шрифтом -->
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{
   --bg:#EEF2EE; --surface:#FFFFFF; --ink:#17201B; --muted:#56635C; --line:#D3DBD5;
